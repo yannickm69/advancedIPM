@@ -1,0 +1,82 @@
+<style>
+  .day{
+      cursor: pointer;
+      height: 100%;
+  }
+</style>
+<div class="container-fluid">
+  <h1>Schedule</h1>
+<div class="row">
+  <div class="col">&nbsp;</div>
+  <% @techs.each do |tech| %>
+    <div class="col bg-info h4 p-2"><%=tech.name %></div>
+  <% end %>
+</div>
+  <%(1..12).each {|h|
+    t = (Time.rfc3339('2021-06-12 05:00:00.52Z') + h.hours)
+  %>
+
+    <div class="row" style="border-bottom: solid 1px #aaa;">
+      <div class="col bg-light text-center h4"><%=t.to_s(:time) %></div>
+        <% @techs.each do  |i| %>
+          <div class="col" style="height: 100px;border-right: 1px solid #aaa">
+            <% appt = false
+              @work.each do |w| %>
+
+              <% if w.technician_id == i.id  && w.time.hour == t.hour
+                   appt = true
+              %>
+                <strong>Start:</strong> <%=w.time.to_s(:time) %><br>
+                <strong>Price:</strong> <%=w.price %><br>
+                <strong>Name:</strong> <%=w.location.name %><br>
+                <strong>City:</strong> <%=w.location.city %>
+              <% end %>
+            <% end %>
+            <% if !appt %>
+              <div class="day" data-time="<%=t %>" data-tech="<%=i.id %>"></div>
+            <% end %>
+          </div>
+        <% end %>
+    </div>
+  <% } %>
+</div>
+
+<div class="modal" tabindex="-1" role="dialog" id="pop">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Time between orders</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" id="result">
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<% content_for :script do %>
+<script>
+    $(function(){
+      $(".day").click(function(){
+          var tech_id = $(this).data("tech");
+          var time = $(this).data("time");
+
+          $.ajax({
+              datatype: "json",
+              data: { "techid": tech_id, "t":time },
+              url: "./timeleft", success: function (result) {
+
+                  $("#result").html(result);
+              }
+          });
+
+          //$("#result").html("ID:" + tech_id + " time:" + time)
+
+          $('#pop').modal();
+      });
+    });
+</script>
+<% end %>
